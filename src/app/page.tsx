@@ -59,15 +59,13 @@ export default function PostChecker() {
   }, [post]);
 
   return (
-    <div className="max-w-xl mx-auto h-[100dvh] py-4 space-y-4 px-4">
+    <div className="max-w-xl mx-auto pt-4 pb-16 space-y-4 px-4">
       <Card className="w-full shadow-none">
         <CardHeader>
           <CardTitle>
             <Bird className="h-6 w-6 text-primary mx-auto mb-2" />
             <h1 className="text-lg md:text-xl font-bold text-center">
-              投稿まえに
-              <br className="md:hidden" />
-              ちょっとだけ考える
+              投稿まえにちょっとだけ考える
               <br />
               ことりすくん
             </h1>
