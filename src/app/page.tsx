@@ -71,9 +71,9 @@ export default function PostChecker() {
             </h1>
           </CardTitle>
           <p className="text-muted-foreground text-sm md:text-center mt-2">
-            その言葉、本当に届けたい気持ち、伝わってるかな？
+            その言葉、伝わってるかな？
             <br />
-            このツールは、投稿の前にちょっとだけ立ち止まる時間をくれます。
+            ことりすくんは、投稿の前に、ちょっとだけ立ち止まるお手伝いをしています。
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
