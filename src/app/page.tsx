@@ -73,7 +73,9 @@ export default function PostChecker() {
           <p className="text-muted-foreground text-sm md:text-center mt-2">
             その言葉、伝わってるかな？
             <br />
-            ことりすくんは、投稿の前に、ちょっとだけ立ち止まるお手伝いをしています。
+            ことりすくんは、投稿の前に、
+            <br className="max-md:hidden" />
+            ちょっとだけ立ち止まるお手伝いをしています。
           </p>
         </CardHeader>
         <CardContent className="space-y-4">
