@@ -4,8 +4,8 @@ import { useState, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Bird, TriangleAlert, Loader, Milestone } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Bird, Loader, Milestone } from "lucide-react";
 
 const MAX_CHARS = 140;
 // リスクの型定義
@@ -30,6 +30,7 @@ export default function PostChecker() {
   const checkRisks = async () => {
     setIsLoading(true);
     setIsReflecting(true);
+    setChecked(true);
 
     const res = await fetch("/api/check-risk", {
       method: "POST",
@@ -41,7 +42,6 @@ export default function PostChecker() {
 
     const data = await res.json();
     setRisks(data.risks || []);
-    setChecked(true);
     setIsReflecting(false);
     setIsLoading(false);
   };
@@ -59,18 +59,20 @@ export default function PostChecker() {
   }, [post]);
 
   return (
-    <div className="max-w-xl mx-auto h-[100dvh] py-4 space-y-4">
+    <div className="max-w-xl mx-auto h-[100dvh] py-4 space-y-4 px-4">
       <Card className="w-full shadow-none">
         <CardHeader>
           <CardTitle>
-            <Milestone className="h-6 w-6 text-primary mx-auto mb-2" />
-            <h1 className="text-xl font-bold text-center">
-              投稿まえにちょっとだけ考える
+            <Bird className="h-6 w-6 text-primary mx-auto mb-2" />
+            <h1 className="text-lg md:text-xl font-bold text-center">
+              投稿まえに
+              <br className="md:hidden" />
+              ちょっとだけ考える
               <br />
               ことりすくん
             </h1>
           </CardTitle>
-          <p className="text-muted-foreground text-sm text-center">
+          <p className="text-muted-foreground text-sm md:text-center mt-2">
             その言葉、本当に届けたい気持ち、伝わってるかな？
             <br />
             このツールは、投稿の前にちょっとだけ立ち止まる時間をくれます。
@@ -84,18 +86,18 @@ export default function PostChecker() {
             onChange={(e) => setPost(e.target.value)}
             disabled={isReflecting}
           />
-          <div className="flex justify-between items-center">
-            <div>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+            <div className="w-full">
               <Button
                 onClick={checkRisks}
-                className="cursor-pointer"
+                className="cursor-pointer max-md:w-full"
                 variant="default"
               >
-                <Bird className="h-4 w-4" />
+                <Milestone className="h-4 w-4" />
                 ことりすくんに聞いてみる
               </Button>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 ml-auto">
               {charCount > 0 && (
                 <div className="relative">
                   <svg className="w-6 h-6" viewBox="0 0 24 24">
@@ -172,10 +174,10 @@ export default function PostChecker() {
             <div className="space-y-2">
               {risks.length === 0 ? (
                 <Alert>
-                  <AlertTitle>
+                  <AlertDescription className="text-black">
                     ことりすくんは、特に気になるところは見つけられませんでした。
-                  </AlertTitle>
-                  <AlertDescription>
+                  </AlertDescription>
+                  <AlertDescription className="text-black mt-2">
                     この投稿、今のところ大丈夫そうです。
                     <br />
                     ただ、もしちょっと迷っている気持ちがあるなら、その感覚も大切にしてあげてくださいね。
@@ -185,10 +187,10 @@ export default function PostChecker() {
                 risks.map((r, i) => (
                   <Alert key={i}>
                     <AlertDescription>
-                      <TriangleAlert className="h-4 w-4 mx-auto" color="red" />
-                      <p className="text-center mx-auto text-red-600">
+                      <Bird className="h-4 w-4 mx-auto" color="red" />
+                      <p className="md:text-center mx-auto text-red-600">
                         「<strong>{r.text}</strong>」という表現は、
-                        <br />
+                        <br className="max-md:hidden" />
                         <span className="font-semibold">
                           ちょっと誤解されやすい表現かも？
                         </span>
