@@ -67,7 +67,7 @@ export const CardRisk = ({ risk }: { risk: Risk }) => {
           />
           <div>
             <p className="text-sm bg-gray-100 p-2 md:p-4 rounded-md relative before:content-[''] before:absolute before:w-0 before:h-0 before:border-t-[6px] before:border-t-transparent before:border-r-[10px] before:border-r-gray-100 before:border-b-[6px] before:border-b-transparent before:left-[-10px] before:top-[7px]">
-              「{risk.text || "詳細情報がありません"}
+              {risk.text || "詳細情報がありません"}
             </p>
             <p className="text-xs text-gray-500 mt-4">{risk.reason}</p>
           </div>
