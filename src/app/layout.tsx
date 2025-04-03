@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/react";
+import { Mail } from "lucide-react";
+import Link from "next/link";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -28,8 +30,21 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
-        {children}
-        <Analytics />
+        <div className="min-h-screen flex flex-col">
+          <div className="flex-grow">{children}</div>
+          <Analytics />
+
+          <footer className="text-center text-xs text-gray-500 border-t border-gray-200">
+            <p className="px-8 py-2">
+              <Link href="https://x.com/kotorisuke">
+                <span className="flex items-center justify-end">
+                  <Mail className="inline-block mr-2 h-3 w-3" />
+                  ご意見・ご要望はXまで
+                </span>
+              </Link>
+            </p>
+          </footer>
+        </div>
       </body>
     </html>
   );

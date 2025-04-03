@@ -1,13 +1,27 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Bird, Loader, Milestone } from "lucide-react";
-
-const MAX_CHARS = 140;
+import {
+  Textarea,
+  Button,
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogTrigger,
+  DialogClose,
+  DialogFooter,
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui";
+import { CardRisk } from "@/app/_feature";
+import { Bird, Loader, Milestone, Copy } from "lucide-react";
 // リスクの型定義
 interface Risk {
   level: string;
@@ -19,19 +33,46 @@ interface Risk {
 }
 
 export default function PostChecker() {
-  const [post, setPost] = useState("");
-  const [charCount, setCharCount] = useState(0);
-  const [isValid, setIsValid] = useState(false);
-  const [isReflecting, setIsReflecting] = useState(false);
+  const MAX_CHARS = 140;
 
+  // 投稿内容
+  const [post, setPost] = useState("");
+
+  // 投稿ボタンの制御
+  const [isValid, setIsValid] = useState(false);
+
+  // リスク
   const [risks, setRisks] = useState<Risk[]>([]);
+
+  // リスクチェック
   const [checked, setChecked] = useState(false);
 
+  // ローディング
   const [isLoading, setIsLoading] = useState(false);
 
+  // コピー
+  const [copied, setCopied] = useState(false);
+
+  const copyToClipboard = () => {
+    navigator.clipboard.writeText(post);
+    setCopied(true);
+  };
+
+  useEffect(() => {
+    if (copied) {
+      const timer = setTimeout(() => setCopied(false), 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [copied]);
+
+  // 投稿内容が140文字以内かどうかをチェック
+  useEffect(() => {
+    setIsValid(post.length > 0 && post.length <= MAX_CHARS);
+  }, [post]);
+
+  // リスクチェック
   const checkRisks = async () => {
     setIsLoading(true);
-    setIsReflecting(true);
     setChecked(true);
 
     const res = await fetch("/api/check-risk", {
@@ -40,11 +81,9 @@ export default function PostChecker() {
       body: JSON.stringify({ post }),
     });
 
-    console.log(res);
-
     const data = await res.json();
+    console.log(data);
     setRisks(data.risks || []);
-    setIsReflecting(false);
     setIsLoading(false);
   };
 
@@ -57,56 +96,31 @@ export default function PostChecker() {
     );
   });
 
+  const handlePostButtonClick = (post: string) => {
+    const encodedText = encodeURIComponent(post);
+    window.open(
+      `https://twitter.com/intent/tweet?text=${encodedText}`,
+      "_blank"
+    );
+  };
+
+  // 高リスクがあるかどうか
+
+  const [openDialog, setOpenDialog] = useState(false);
   const hasHighRisk = risks.some((r) => r.level === "high");
 
-  useEffect(() => {
-    setCharCount(post.length);
-
-    if (post.length > 0 && post.length <= MAX_CHARS) {
-      setIsValid(true);
+  const handlePostClick = () => {
+    if (hasHighRisk) {
+      setOpenDialog(true);
     } else {
-      setIsValid(false);
-    }
-  }, [post]);
-
-  const getTextColor = (level: string) => {
-    switch (level) {
-      case "low":
-        return "text-green-600";
-      case "medium":
-        return "text-orange-600";
-      case "high":
-        return "text-red-600";
-      default:
-        return "";
+      handlePostButtonClick(post);
     }
   };
 
-  const getBirdColor = (level: string) => {
-    switch (level) {
-      case "high":
-        return "red";
-      case "medium":
-        return "orange";
-      case "low":
-        return "green";
-      default:
-        return "";
-    }
+  const handleConfirm = () => {
+    setOpenDialog(false);
+    handlePostButtonClick(post);
   };
-
-  function getKotorisComment(excerpt: string, level: string) {
-    switch (level) {
-      case "high":
-        return `「<strong>${excerpt}</strong>」という表現、<br class="max-md:hidden" />ちょっと誤解されやすいかも？`;
-      case "medium":
-        return `「<strong>${excerpt}</strong>」という表現、<br class="max-md:hidden" />見る人によっては少し強く感じられるかも？`;
-      case "low":
-        return `「<strong>${excerpt}</strong>」という表現、<br class="max-md:hidden" />人によってはちょっぴり気になるかも？`;
-      default:
-        return `「<strong>${excerpt}</strong>」という表現、<br class="max-md:hidden" />ちょっと気にしてみてもいいかも？`;
-    }
-  }
 
   return (
     <div className="max-w-xl mx-auto pt-4 pb-16 space-y-4 px-4">
@@ -128,15 +142,36 @@ export default function PostChecker() {
             ちょっとだけ立ち止まるお手伝いをしています。
           </p>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent>
           <Textarea
             placeholder="投稿内容を入力してください"
             rows={5}
             value={post}
             onChange={(e) => setPost(e.target.value)}
-            disabled={isReflecting}
           />
-          <div className="flex flex-col md:flex-row justify-between items-center gap-4">
+
+          <div className="flex items-center justify-end gap-2 mt-1 pr-2">
+            <Popover open={copied}>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="link"
+                  onClick={copyToClipboard}
+                  className="p-0! cursor-pointer"
+                >
+                  <Copy className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent side="top">コピーしました</PopoverContent>
+            </Popover>
+            <p
+              className={`text-xs ${
+                post.length > MAX_CHARS ? "text-red-500" : "text-gray-500"
+              }`}
+            >
+              {post.length}/{MAX_CHARS}
+            </p>
+          </div>
+          <div className="flex flex-col md:flex-row justify-between items-center gap-4 mt-2">
             <div className="w-full">
               <Button
                 onClick={checkRisks}
@@ -148,68 +183,52 @@ export default function PostChecker() {
               </Button>
             </div>
             <div className="flex items-center gap-3 ml-auto">
-              {charCount > 0 && (
-                <div className="relative">
-                  <svg className="w-6 h-6" viewBox="0 0 24 24">
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      fill="none"
-                      stroke="#e5e7eb"
-                      strokeWidth="2"
-                    />
-                    <circle
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      fill="none"
-                      stroke={
-                        charCount > MAX_CHARS
-                          ? "#ef4444"
-                          : charCount > MAX_CHARS * 0.8
-                          ? "#f59e0b"
-                          : "#3b82f6"
-                      }
-                      strokeWidth="2"
-                      strokeDasharray={`${(charCount / MAX_CHARS) * 63} 63`}
-                      strokeDashoffset="0"
-                      strokeLinecap="round"
-                      transform="rotate(-90 12 12)"
-                    />
-                  </svg>
-                  {charCount > MAX_CHARS * 0.8 && (
-                    <span
-                      className={`absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-xs font-bold ${
-                        charCount > MAX_CHARS
-                          ? "text-red-500"
-                          : "text-amber-500"
-                      }`}
-                    >
-                      {MAX_CHARS - charCount}
-                    </span>
-                  )}
-                </div>
-              )}
-              <a
-                href={`https://twitter.com/intent/tweet?text=${encodeURIComponent(
-                  post
-                )}`}
-                target="_blank"
-                rel="noopener noreferrer"
+              <Button
+                disabled={!isValid}
+                variant="default"
+                className={`cursor-pointer bg-black hover:bg-black/80 ${
+                  hasHighRisk ? "bg-gray-400 hover:bg-gray-400" : ""
+                }`}
+                onClick={handlePostClick}
               >
-                <Button
-                  disabled={!isValid || hasHighRisk}
-                  variant="default"
-                  className="cursor-pointer bg-black hover:bg-black/80"
-                >
-                  Xに投稿する
-                </Button>
-              </a>
+                Xに投稿する
+              </Button>
             </div>
           </div>
         </CardContent>
       </Card>
+
+      <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-center">ちょっと待って！</DialogTitle>
+            <DialogDescription className="mt-2 text-sm text-black text-left md:text-center leading-relaxed">
+              この投稿には
+              <strong className="text-red-600">誤解されやすい</strong>
+              表現が含まれているかも？
+            </DialogDescription>
+            <DialogDescription className="mt-2 text-xs text-muted-foreground text-left md:text-center leading-relaxed">
+              ことりすくんが「ほんとに投稿して大丈夫かな...？」って羽ばたいています。
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex flex-col md:flex-row gap-3 mt-3">
+            <Button
+              variant="secondary"
+              onClick={() => setOpenDialog(false)}
+              className="cursor-pointer"
+            >
+              やっぱやめとく
+            </Button>
+            <Button
+              variant="default"
+              onClick={handleConfirm}
+              className="bg-black hover:bg-black/80 cursor-pointer"
+            >
+              それでも投稿する
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {checked && (
         <>
@@ -222,54 +241,9 @@ export default function PostChecker() {
             </div>
           ) : (
             <div className="space-y-2">
-              {risks.length === 0 ? (
-                <Alert>
-                  <AlertDescription className="text-black">
-                    ことりすくんは、特に気になるところは見つけられませんでした。
-                  </AlertDescription>
-                  <AlertDescription className="text-black mt-2">
-                    この投稿、今のところ大丈夫そうです。
-                    <br />
-                    ただ、もしちょっと迷っている気持ちがあるなら、その感覚も大切にしてあげてくださいね。
-                  </AlertDescription>
-                </Alert>
-              ) : (
-                sortedRisks.map((r, i) => (
-                  <Alert key={i}>
-                    <AlertDescription>
-                      <Milestone
-                        className="h-4 w-4 mx-auto"
-                        color={getBirdColor(r.level)}
-                      />
-                      <p
-                        className={`md:text-center mx-auto ${getTextColor(
-                          r.level
-                        )}`}
-                        dangerouslySetInnerHTML={{
-                          __html: getKotorisComment(r.excerpt, r.level),
-                        }}
-                      />
-                    </AlertDescription>
-
-                    <AlertDescription className="mt-4">
-                      <div className="text-black flex gap-4">
-                        <Bird
-                          className="h-4 w-4 flex-shrink-0 mt-[7px]"
-                          color={getBirdColor(r.level)}
-                        />
-                        <div>
-                          <p className="text-sm bg-gray-100 p-2 md:p-4 rounded-md relative before:content-[''] before:absolute before:w-0 before:h-0 before:border-t-[6px] before:border-t-transparent before:border-r-[10px] before:border-r-gray-100 before:border-b-[6px] before:border-b-transparent before:left-[-10px] before:top-[7px]">
-                            {r.text}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-4">
-                            {r.reason}
-                          </p>
-                        </div>
-                      </div>
-                    </AlertDescription>
-                  </Alert>
-                ))
-              )}
+              {sortedRisks.map((risk) => (
+                <CardRisk key={risk.excerpt} risk={risk} />
+              ))}
             </div>
           )}
         </>
