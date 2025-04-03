@@ -13,6 +13,8 @@ interface Risk {
   level: string;
   type: string;
   reason: string;
+  excerpt: string;
+  mode: string;
   text: string;
 }
 
@@ -46,7 +48,16 @@ export default function PostChecker() {
     setIsLoading(false);
   };
 
-  const hasHighRisk = risks.some((r) => r.level === "高リスク");
+  // リスクレベルでソート: high -> medium -> low の順
+  const sortedRisks = [...risks].sort((a, b) => {
+    const levelOrder = { high: 0, medium: 1, low: 2 };
+    return (
+      levelOrder[a.level as keyof typeof levelOrder] -
+      levelOrder[b.level as keyof typeof levelOrder]
+    );
+  });
+
+  const hasHighRisk = risks.some((r) => r.level === "high");
 
   useEffect(() => {
     setCharCount(post.length);
@@ -57,6 +68,45 @@ export default function PostChecker() {
       setIsValid(false);
     }
   }, [post]);
+
+  const getTextColor = (level: string) => {
+    switch (level) {
+      case "low":
+        return "text-green-600";
+      case "medium":
+        return "text-orange-600";
+      case "high":
+        return "text-red-600";
+      default:
+        return "";
+    }
+  };
+
+  const getBirdColor = (level: string) => {
+    switch (level) {
+      case "high":
+        return "red";
+      case "medium":
+        return "orange";
+      case "low":
+        return "green";
+      default:
+        return "";
+    }
+  };
+
+  function getKotorisComment(excerpt: string, level: string) {
+    switch (level) {
+      case "high":
+        return `「<strong>${excerpt}</strong>」という表現、<br class="max-md:hidden" />ちょっと誤解されやすいかも？`;
+      case "medium":
+        return `「<strong>${excerpt}</strong>」という表現、<br class="max-md:hidden" />見る人によっては少し強く感じられるかも？`;
+      case "low":
+        return `「<strong>${excerpt}</strong>」という表現、<br class="max-md:hidden" />人によってはちょっぴり気になるかも？`;
+      default:
+        return `「<strong>${excerpt}</strong>」という表現、<br class="max-md:hidden" />ちょっと気にしてみてもいいかも？`;
+    }
+  }
 
   return (
     <div className="max-w-xl mx-auto pt-4 pb-16 space-y-4 px-4">
@@ -184,20 +234,38 @@ export default function PostChecker() {
                   </AlertDescription>
                 </Alert>
               ) : (
-                risks.map((r, i) => (
+                sortedRisks.map((r, i) => (
                   <Alert key={i}>
                     <AlertDescription>
-                      <Bird className="h-4 w-4 mx-auto" color="red" />
-                      <p className="md:text-center mx-auto text-red-600">
-                        「<strong>{r.text}</strong>」という表現は、
-                        <br className="max-md:hidden" />
-                        <span className="font-semibold">
-                          ちょっと誤解されやすい表現かも？
-                        </span>
-                      </p>
+                      <Milestone
+                        className="h-4 w-4 mx-auto"
+                        color={getBirdColor(r.level)}
+                      />
+                      <p
+                        className={`md:text-center mx-auto ${getTextColor(
+                          r.level
+                        )}`}
+                        dangerouslySetInnerHTML={{
+                          __html: getKotorisComment(r.excerpt, r.level),
+                        }}
+                      />
                     </AlertDescription>
-                    <AlertDescription className="text-black mt-2">
-                      {r.reason}
+
+                    <AlertDescription className="mt-4">
+                      <div className="text-black flex gap-4">
+                        <Bird
+                          className="h-4 w-4 flex-shrink-0 mt-[7px]"
+                          color={getBirdColor(r.level)}
+                        />
+                        <div>
+                          <p className="text-sm bg-gray-100 p-2 md:p-4 rounded-md relative before:content-[''] before:absolute before:w-0 before:h-0 before:border-t-[6px] before:border-t-transparent before:border-r-[10px] before:border-r-gray-100 before:border-b-[6px] before:border-b-transparent before:left-[-10px] before:top-[7px]">
+                            {r.text}
+                          </p>
+                          <p className="text-xs text-gray-500 mt-4">
+                            {r.reason}
+                          </p>
+                        </div>
+                      </div>
                     </AlertDescription>
                   </Alert>
                 ))
