@@ -13,8 +13,6 @@ import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
-  DialogTrigger,
-  DialogClose,
   DialogFooter,
   Popover,
   PopoverContent,
