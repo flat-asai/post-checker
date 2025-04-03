@@ -123,7 +123,7 @@ export default function PostChecker() {
   };
 
   return (
-    <div className="max-w-xl mx-auto pt-4 pb-16 space-y-4 px-4">
+    <div className="max-w-xl mx-auto pt-6 pb-16 space-y-4 px-4">
       <Card className="w-full shadow-none">
         <CardHeader>
           <CardTitle>
